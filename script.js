@@ -419,6 +419,7 @@ document.getElementById('carForm').addEventListener('submit', function(e) {
   const downpayment = parseFloat(document.getElementById('downpayment').value) || 0;
   const annualInsurance = parseFloat(document.getElementById('insurance').value) || 0;
   const annualInterestRate = 9.5;
+  const annualInterestRateOnRoad = 8.5;
 
   if (
     isNaN(exShowroom) || exShowroom <= 0 ||
@@ -436,7 +437,7 @@ document.getElementById('carForm').addEventListener('submit', function(e) {
   const netExShowroom = exShowroom - downpayment;
   const netOnRoad = onRoad - downpayment;
   const emiExShowroom = calculateEMI(netExShowroom, annualInterestRate, tenure);
-  const emiOnRoad = calculateEMI(netOnRoad, annualInterestRate, tenure);
+  const emiOnRoad = calculateEMI(netOnRoad, annualInterestRateOnRoad, tenure);
   const residualValueExShowroom = netExShowroom * 0.20;
   const totalInsuranceCost = annualInsurance * (tenure - 1);
   const totalCostExShowroom = (emiExShowroom * tenure * 12) + downpayment + residualValueExShowroom;
