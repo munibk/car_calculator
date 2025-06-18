@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Car Finance Calculator</title>
   <meta charset="UTF-8">
+  <title>Car Finance Calculator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -93,37 +93,70 @@
 <body>
   <div class="container">
     <h2>Car Finance Calculator</h2>
-    <form id="carForm">
+    <form id="carForm" autocomplete="off">
       <label for="exShowroom">Ex-Showroom Price</label>
-      <input type="number" id="exShowroom" required placeholder="e.g. 1000000">
+      <input type="number" id="exShowroom" required placeholder="e.g. 1000000" min="0">
 
       <label for="onRoad">On-Road Price</label>
-      <input type="number" id="onRoad" required placeholder="e.g. 1200000">
+      <input type="number" id="onRoad" required placeholder="e.g. 1200000" min="0">
 
       <label for="tenure">Tenure (years)</label>
-      <input type="number" id="tenure" required placeholder="e.g. 5">
+      <input type="number" id="tenure" required placeholder="e.g. 5" min="1">
 
       <label for="downpayment">Downpayment</label>
-      <input type="number" id="downpayment" value="0" placeholder="e.g. 50000">
+      <input type="number" id="downpayment" value="0" placeholder="e.g. 50000" min="0">
 
       <button type="submit">Calculate</button>
     </form>
     <div id="result"></div>
   </div>
   <script>
+    /**
+     * Calculate EMI using the standard formula.
+     * @param {number} principal
+     * @param {number} annualRate
+     * @param {number} tenureYears
+     * @returns {number}
+     */
     function calculateEMI(principal, annualRate, tenureYears) {
-      const R = annualRate / 12 / 100;
-      const N = tenureYears * 12;
-      return (principal * R * Math.pow(1 + R, N)) / (Math.pow(1 + R, N) - 1);
+      const monthlyRate = annualRate / 12 / 100;
+      const months = tenureYears * 12;
+      if (monthlyRate === 0) return principal / months;
+      return (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+             (Math.pow(1 + monthlyRate, months) - 1);
     }
 
-    document.getElementById('carForm').onsubmit = function(e) {
+    /**
+     * Format number as INR currency.
+     * @param {number} value
+     * @returns {string}
+     */
+    function formatINR(value) {
+      return `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    }
+
+    document.getElementById('carForm').addEventListener('submit', function(e) {
       e.preventDefault();
+
+      // Get input values
       const exShowroom = parseFloat(document.getElementById('exShowroom').value);
       const onRoad = parseFloat(document.getElementById('onRoad').value);
-      const tenure = parseInt(document.getElementById('tenure').value);
+      const tenure = parseInt(document.getElementById('tenure').value, 10);
       const downpayment = parseFloat(document.getElementById('downpayment').value) || 0;
       const annualInterestRate = 9.5;
+
+      // Input validation
+      if (
+        isNaN(exShowroom) || exShowroom <= 0 ||
+        isNaN(onRoad) || onRoad <= 0 ||
+        isNaN(tenure) || tenure <= 0 ||
+        downpayment < 0 ||
+        downpayment >= exShowroom ||
+        downpayment >= onRoad
+      ) {
+        document.getElementById('result').innerHTML = `<p style="color:red;">Please enter valid values. Downpayment must be less than both prices.</p>`;
+        return;
+      }
 
       // Net prices after downpayment
       const netExShowroom = exShowroom - downpayment;
@@ -137,9 +170,7 @@
       const residualValueExShowroom = netExShowroom * 0.20;
 
       // Total cost calculations
-      // For ex-showroom: EMI paid + downpayment + residual value
       const totalCostExShowroom = (emiExShowroom * tenure * 12) + downpayment + residualValueExShowroom;
-      // For on-road: EMI paid + downpayment
       const totalCostOnRoad = (emiOnRoad * tenure * 12) + downpayment;
 
       // Savings based on total cost (on-road vs ex-showroom)
@@ -147,18 +178,18 @@
 
       document.getElementById('result').innerHTML = `
         <h3>Ex-Showroom Purchase</h3>
-        <p><b>EMI:</b> ₹${emiExShowroom.toLocaleString('en-IN', {minimumFractionDigits:2})}</p>
-        <p><b>Residual Value:</b> ₹${residualValueExShowroom.toLocaleString('en-IN', {minimumFractionDigits:2})}</p>
-        <p><b>Total Cost (EMI + Downpayment + Residual Value):</b> ₹${totalCostExShowroom.toLocaleString('en-IN', {minimumFractionDigits:2})}</p>
+        <p><b>EMI:</b> ${formatINR(emiExShowroom)}</p>
+        <p><b>Residual Value:</b> ${formatINR(residualValueExShowroom)}</p>
+        <p><b>Total Cost (EMI + Downpayment + Residual Value):</b> ${formatINR(totalCostExShowroom)}</p>
         <hr>
         <h3>On-Road Purchase</h3>
-        <p><b>EMI:</b> ₹${emiOnRoad.toLocaleString('en-IN', {minimumFractionDigits:2})}</p>
-        <p><b>Total Cost (EMI + Downpayment):</b> ₹${totalCostOnRoad.toLocaleString('en-IN', {minimumFractionDigits:2})}</p>
+        <p><b>EMI:</b> ${formatINR(emiOnRoad)}</p>
+        <p><b>Total Cost (EMI + Downpayment):</b> ${formatINR(totalCostOnRoad)}</p>
         <hr>
         <h3>Comparison</h3>
-        <p><b>Savings (On-Road vs Ex-Showroom):</b> ₹${savings.toLocaleString('en-IN', {minimumFractionDigits:2})}</p>
+        <p><b>Savings (On-Road vs Ex-Showroom):</b> ${formatINR(savings)}</p>
       `;
-    };
+    });
   </script>
 </body>
 </html>
